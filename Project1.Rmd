@@ -1,0 +1,209 @@
+---
+title: 'Reproducible Research Project # 1'
+author: "Pablo Sainz"
+date: "1 de junio de 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+This markdown file is part of the 1st project of the Reproducible Research course from John Hopkins Data Science Specialization.
+
+### Data Loading
+
+First we load the required data to perform the analysis:
+```{r echo=TRUE}
+
+rawStepDataSet <- read.csv("C:\\Users\\psainza\\Documents\\Course5Project1\\activity.csv")
+filteredStepDataSet <- rawStepDataSet[!is.na(rawStepDataSet$steps),]
+
+```
+
+## Steps per Day
+
+The following histogram illustrates the total ammount of steps taken per day:
+
+```{r echo=TRUE}
+
+# Obtain the distinct days of the filtered data set
+targetDays <- unique(filteredStepDataSet$date)
+resultData <- data.frame("Day"=character(),"TotalSteps"=numeric(),stringsAsFactors = FALSE)
+colnames(resultData) <- c("Day","Total.Steps")
+
+for (targetDay in targetDays) {
+  #Filter the data
+  currentDayData <-filteredStepDataSet[filteredStepDataSet$date == targetDay,]
+  #Get the current total of emissions on that year
+  currentStepsTotal <- sum(currentDayData$steps)
+  newRow <- data.frame(targetDay,currentStepsTotal)
+  resultData <- rbind(resultData,newRow) 
+}
+
+barplot(resultData$currentStepsTotal,main = "Total Steps per Day",xlab = "Date",names.arg = unique(resultData$targetDay),ylab = "Total Steps measured")
+  
+```
+
+## Indicators of Steps per Day
+
+The mean and median steps per day are shown in the following table:
+
+```{r echo=TRUE}
+# Obtain the distinct days of the filtered data set
+targetDays <- unique(filteredStepDataSet$date)
+resultData2 <- data.frame("Day"=character(),"MeanSteps"=numeric(),"MedianSteps"=numeric(),stringsAsFactors = FALSE)
+colnames(resultData2) <- c("Day","Mean.Steps","Median.Steps")
+
+for (targetDay in targetDays) {
+  #Filter the data
+  currentDayData <-filteredStepDataSet[filteredStepDataSet$date == targetDay,]
+  #Get the current total of emissions on that year
+  currentStepsMean <- mean(currentDayData$steps)
+  currentStepsMedian <- median(currentDayData$steps)
+  newRow <- data.frame(targetDay,currentStepsMean,currentStepsMedian)
+  resultData2 <- rbind(resultData2,newRow) 
+}
+colnames(resultData2) <- c("Day","Mean.Steps","Median.Steps")
+print(resultData2)
+
+```
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+## Average Steps across Time
+
+The average steps taken per day are shown in the following figure:
+
+```{r echo=TRUE}
+
+# Obtain the distinct days of the filtered data set
+targetDays <- unique(filteredStepDataSet$date)
+resultData3 <- data.frame("Day"=character(),"MeanSteps"=numeric(),stringsAsFactors = FALSE)
+colnames(resultData3) <- c("Day","Mean.Steps")
+
+for (targetDay in targetDays) {
+  #Filter the data
+  currentDayData <-filteredStepDataSet[filteredStepDataSet$date == targetDay,]
+  #Get the current total of emissions on that year
+  currentStepsMean <- mean(currentDayData$steps,na.rm = TRUE)
+  newRow <- data.frame(targetDay,currentStepsMean)
+  resultData3 <- rbind(resultData3,newRow) 
+}
+colnames(resultData3) <- c("Day","Mean.Steps")
+
+#print(resultData3)
+plot.ts(resultData3$Mean.Steps,main="Average Steps per Day across Time",ylab="Average Steps per Day",xlab="Date",axes = F)
+axis(2)
+axis(1,at=resultData3$Day,labels = resultData3$Day)
+
+```
+
+## Time Interval with Maximum Average Steps Taken
+
+The daily interval which in average shows the maximum steps taken in average is the following:
+
+```{r echo=TRUE}
+
+# Obtain the distinct days of the filtered data set
+targetIntervals <- unique(filteredStepDataSet$interval)
+resultData4 <- data.frame("Interval"=numeric(),"Average.Steps"=numeric(),stringsAsFactors = FALSE)
+colnames(resultData4) <- c("Interval","Average.Steps")
+
+for (targetInterval in targetIntervals) {
+  #Filter the data
+  currentInterval <-filteredStepDataSet[filteredStepDataSet$interval == targetInterval,]
+  #Get the current total of emissions on that year
+  currentStepsAverage <- mean(currentInterval$steps)
+  newRow <- data.frame(targetInterval,currentStepsAverage)
+  resultData4 <- rbind(resultData4,newRow) 
+}
+colnames(resultData4) <- c("Interval","Average.Steps")
+finalResult = resultData4[max(resultData4$Average.Steps) == resultData4$Average.Steps,]
+print(head(finalResult,row.names = FALSE))
+
+```
+
+## Replacing Missing Data 
+
+One strategy to replace the missing data across the data set. Particularly on the 'steps' column would be to replace the 'NA' values with zeros, since no safe assumptions can be made in order to interpolate across the time intervals.
+
+Given that strategy, the code to implement such data filling is disclosed as it follows:
+
+```{r echo=TRUE}
+filledStepDataSet <- read.csv("C:\\Users\\psainza\\Documents\\Course5Project1\\activity.csv")
+
+#Fill the steps column with 0s on missng values
+filledStepDataSet[is.na(filledStepDataSet)]<-0
+
+```
+
+Which now displays the missing first day due lack of data captured:
+```{r echo=TRUE}
+head(filledStepDataSet)
+```
+
+## Total Steps per Day with Full Data Set
+
+The following figure shows the total steps taken per day now with the full data set considering the previous replacement of NA values:
+
+```{r echo=TRUE}
+# Obtain the distinct days of the filtered data set
+targetDays <- unique(filledStepDataSet$date)
+resultData5 <- data.frame("Day"=character(),"TotalSteps"=numeric(),stringsAsFactors = FALSE)
+colnames(resultData5) <- c("Day","Total.Steps")
+
+for (targetDay in targetDays) {
+  #Filter the data
+  currentDayData <-filledStepDataSet[filledStepDataSet$date == targetDay,]
+  #Get the current total of emissions on that year
+  currentStepsTotal <- sum(currentDayData$steps)
+  newRow <- data.frame(targetDay,currentStepsTotal)
+  resultData5 <- rbind(resultData5,newRow) 
+}
+
+barplot(resultData5$currentStepsTotal,main = "Total Steps per Day",xlab = "Date",names.arg = unique(resultData5$targetDay),ylab = "Total Steps Measured")
+```
+
+## Average Steps Comparison Weekdays vs Weekends
+
+The following plots show a comparison of the average steps taken per interval on weekdays vs weekend days:
+
+```{r echo=TRUE}
+# Load the required library
+library(chron)
+targetIntervals <- unique(filledStepDataSet$interval)
+resultDataWeekdays <- data.frame("Interval"=character(),"AverageSteps"=numeric(),stringsAsFactors = FALSE)
+resultDataWeekends <- data.frame("Interval"=character(),"AverageSteps"=numeric(),stringsAsFactors = FALSE)
+
+
+for (targetInterval in targetIntervals) {
+  #Filter the data
+  currentIntervalData <-filledStepDataSet[filledStepDataSet$interval == targetInterval,]
+  #Get the data from weekdays and weekends
+  currentWeekdaysData <- currentIntervalData[is.weekend(currentIntervalData$date),]
+  currentWeekendsData <- currentIntervalData[!is.weekend(currentIntervalData$date),]
+  #Get the averages for each result data set
+  currentWeekdaysAverage <- mean(currentWeekdaysData$steps)
+  currentWeekendsAverage <- mean(currentWeekendsData$steps)
+  
+  newWeekdayRow <- data.frame(targetInterval,currentWeekdaysAverage)
+  newWeekendRow <- data.frame(targetInterval,currentWeekendsAverage)
+  
+  #Append the result rows
+  resultDataWeekdays <- rbind(resultDataWeekdays,newWeekdayRow)
+  resultDataWeekends <- rbind(resultDataWeekends,newWeekendRow)
+}
+
+colnames(resultDataWeekdays) <- c("Interval","Average.Steps")
+colnames(resultDataWeekends) <- c("Interval","Average.Steps")
+# Construct the plot
+par(bg="white",mfrow=c(1,2))
+barplot(resultDataWeekdays$Average.Steps,main = "Average Steps per Interval \n Weekdays",xlab = "Interval",names.arg = unique(resultDataWeekdays$Interval),ylab = "Average Steps Measured")
+barplot(resultDataWeekends$Average.Steps,main = "Average Steps per Interval \n Weekends",xlab = "Interval",names.arg = unique(resultDataWeekends$Interval),ylab = "Average Steps Measured")
+
+```
+
+
+
